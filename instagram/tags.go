@@ -6,7 +6,7 @@
 package instagram
 
 import (
-	"errors"
+	// "errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -82,12 +82,17 @@ func (s *TagsService) RecentMedia(tagName string, opt *Parameters) ([]Media, *Re
 
 	_, err = s.client.Do(req, media)
 	if err != nil {
-		if req != nil && req.URL != nil {
-			return nil, nil, errors.New(fmt.Sprintf("go-instagram Tag.RecentMedia error:%s on URL %s", err.Error(), req.URL.String()))
-		} else {
-			return nil, nil, errors.New(fmt.Sprintf("go-instagram Tag.RecentMedia error:%s on nil URL", err.Error()))
-		}
+		return nil, nil, err
 	}
+	/*
+		if err != nil {
+			if req != nil && req.URL != nil {
+				return nil, nil, errors.New(fmt.Sprintf("go-instagram Tag.RecentMedia error:%s on URL %s", err.Error(), req.URL.String()))
+			} else {
+				return nil, nil, errors.New(fmt.Sprintf("go-instagram Tag.RecentMedia error:%s on nil URL", err.Error()))
+			}
+		}
+	*/
 
 	page := new(ResponsePagination)
 	if s.client.Response.Pagination != nil {

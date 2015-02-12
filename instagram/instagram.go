@@ -302,6 +302,14 @@ func (c *Client) Do(req *http.Request, v interface{}) (*http.Response, error) {
 	return resp, err
 }
 
+// InstagramError represents an error recieved from instagram
+type InstagramError ResponseMeta
+
+// Error makes the InstagramError suitable for the error interface
+func (err *InstagramError) Error() string {
+	return fmt.Sprintf("%s (%d): %s", err.ErrorType, err.Code, err.ErrorMessage)
+}
+
 // ErrorResponse represents a Response which contains an error
 type ErrorResponse Response
 
@@ -336,40 +344,65 @@ func CheckResponse(r *http.Response) error {
 		return nil
 	}
 
-	resp := new(ErrorResponse)
-	resp.Response = r
+	data, readErr := ioutil.ReadAll(r.Body)
+	if readErr != nil {
+		return readErr
+	}
+
+	// Forbidden: see http://instagram.com/developer/restrict-api-requests/
+	if r.StatusCode == http.StatusForbidden {
+		err := &InstagramError{}
+		json.Unmarshal(data, &err)
+		return err
+	}
+
+	// RateLimit: see http://instagram.com/developer/limits/
+	if r.StatusCode == 429 {
+		err := &InstagramError{}
+		json.Unmarshal(data, &err)
+		return err
+	}
 
 	// Sometimes Instagram returns 500 with plain message
 	// "Oops, an error occurred.".
 	if r.StatusCode == http.StatusInternalServerError {
-		meta := &ResponseMeta{
+		err := &InstagramError{
 			ErrorType:    "Internal Server Error",
-			Code:         500,
+			Code:         http.StatusInternalServerError,
 			ErrorMessage: "Oops, an error occurred.",
 		}
-		resp.Meta = meta
-
-		return resp
+		return err
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err == nil && data != nil {
+	if data != nil {
 		// Unlike for successful (2XX) requests, unsuccessful
 		// requests SOMETIMES have the {Meta: Error{}} format but
 		// SOMETIMES they are just Error{}. From what I can tell, there is not
 		// an obvious rationale behind what gets constructed in which way, so
 		// we need to try both:
-		meta := new(ResponseMeta)
-		json.Unmarshal(data, meta)
-		if *meta != *new(ResponseMeta) {
+		err := &InstagramError{}
+		json.Unmarshal(data, err)
+		if *err != *new(InstagramError) {
 			// Unmarshaling did something
-			resp.Meta = meta
+			return err
 		} else {
 			// Unmarshaling did nothing for us, so the format was not Error{}.
 			// We will assume the format was {Meta: Error{}}:
-			json.Unmarshal(data, resp)
+			temp := make(map[string]interface{})
+			json.Unmarshal(data, &temp)
+
+			// Convert the meta field to InstagramError
+			if igErr, ok := temp["meta"].(*InstagramError); ok {
+				return igErr
+			} else {
+				return &InstagramError{
+					ErrorType:    "Unknown Error",
+					Code:         0,
+					ErrorMessage: fmt.Sprintf("%v", temp),
+				}
+			}
 		}
 	}
 
-	return resp
+	return nil
 }
