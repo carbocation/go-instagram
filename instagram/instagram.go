@@ -388,19 +388,13 @@ func CheckResponse(r *http.Response) error {
 		} else {
 			// Unmarshaling did nothing for us, so the format was not Error{}.
 			// We will assume the format was {Meta: Error{}}:
-			temp := make(map[string]interface{})
+			temp := make(map[string]InstagramError)
 			json.Unmarshal(data, &temp)
 
-			// Convert the meta field to InstagramError
-			if igErr, ok := temp["meta"].(*InstagramError); ok {
-				return igErr
-			} else {
-				return &InstagramError{
-					ErrorType:    "Unknown Error",
-					Code:         0,
-					ErrorMessage: fmt.Sprintf("%v", temp),
-				}
-			}
+			meta := temp["meta"]
+
+			delete(temp, "meta") // Probably uselesss
+			return &meta
 		}
 	}
 
