@@ -148,6 +148,7 @@ func (s *MediaService) Search(opt *Parameters) ([]Media, *ResponsePagination, er
 		}
 		params.Add("count", strconv.FormatInt(1001, 10))
 		u += "?" + params.Encode()
+		fmt.Println(u)
 	}
 
 	req, err := s.client.NewRequest("GET", u, "")
