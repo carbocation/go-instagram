@@ -146,11 +146,11 @@ func (s *MediaService) Search(opt *Parameters) ([]Media, *ResponsePagination, er
 		if opt.Distance != 0 {
 			params.Add("distance", strconv.FormatFloat(opt.Distance, 'f', 7, 64))
 		}
-		if opt.Count != 0{
+		if opt.Count != 0{ //This parameter is not "officially" supported in instagram. However we found that it works. There is no guarantee that will work always.
 			params.Add("count", strconv.FormatUint(opt.Count, 10))
 		}
 		u += "?" + params.Encode()
-		fmt.Println(u)
+		//fmt.Println(u)
 	}
 
 	req, err := s.client.NewRequest("GET", u, "")
