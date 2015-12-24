@@ -23,8 +23,8 @@ type TagsService struct {
 
 // Tag represents information about a tag object.
 type Tag struct {
-	MediaCount int    `json:"media_count,omitempty"`
-	Name       string `json:"name,omitempty"`
+	MediaCount float64 `json:"media_count,omitempty"`
+	Name       string  `json:"name,omitempty"`
 }
 
 // Get information aout a tag object.

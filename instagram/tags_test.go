@@ -18,7 +18,7 @@ func TestTagsService_Get(t *testing.T) {
 
 	mux.HandleFunc("/tags/tag-name", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		fmt.Fprint(w, `{"data":{"name": "tag-name"}}`)
+		fmt.Fprint(w, `{"data": {"media_count": 0, "name":"tag-name"}}`)
 	})
 
 	tag, err := client.Tags.Get("tag-name")
@@ -71,7 +71,7 @@ func TestTagsService_Search(t *testing.T) {
 		testFormValues(t, r, values{
 			"q": "tag-name",
 		})
-		fmt.Fprint(w, `{"data": [{"name":"tag-name"}]}`)
+		fmt.Fprint(w, `{"data": [{"media_count": 0.0, "name":"tag-name"}]}`)
 	})
 
 	tags, _, err := client.Tags.Search("tag-name")
