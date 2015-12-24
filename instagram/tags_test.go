@@ -39,8 +39,8 @@ func TestTagsService_RecentMedia(t *testing.T) {
 	mux.HandleFunc("/tags/tagname/media/recent", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		testFormValues(t, r, values{
-			"min_id": "1",
-			"max_id": "1",
+			"min_tag_id": "1",
+			"max_tag_id": "1",
 			"count":  "1",
 		})
 		fmt.Fprint(w, `{"data": [{"id":"1"}]}`)
