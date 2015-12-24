@@ -66,10 +66,10 @@ func (s *TagsService) RecentMedia(tagName string, opt *Parameters) ([]Media, *Re
 			params.Add("count", strconv.FormatUint(opt.Count, 10))
 		}
 		if opt.MinID != "" {
-			params.Add("min_id", opt.MinID)
+			params.Add("min_tag_id", opt.MinID)
 		}
 		if opt.MaxID != "" {
-			params.Add("max_id", opt.MaxID)
+			params.Add("max_tag_id", opt.MaxID)
 		}
 		u += "?" + params.Encode()
 	}
