@@ -23,8 +23,8 @@ type TagsService struct {
 
 // Tag represents information about a tag object.
 type Tag struct {
-	MediaCount int    `json:"media_count,omitempty"`
-	Name       string `json:"name,omitempty"`
+	MediaCount float64 `json:"media_count,omitempty"`
+	Name       string  `json:"name,omitempty"`
 }
 
 // Get information aout a tag object.
@@ -66,10 +66,10 @@ func (s *TagsService) RecentMedia(tagName string, opt *Parameters) ([]Media, *Re
 			params.Add("count", strconv.FormatUint(opt.Count, 10))
 		}
 		if opt.MinID != "" {
-			params.Add("min_id", opt.MinID)
+			params.Add("min_tag_id", opt.MinID)
 		}
 		if opt.MaxID != "" {
-			params.Add("max_id", opt.MaxID)
+			params.Add("max_tag_id", opt.MaxID)
 		}
 		u += "?" + params.Encode()
 	}
