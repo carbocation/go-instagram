@@ -9,7 +9,6 @@ import (
 	// "errors"
 	"fmt"
 	"net/url"
-	"regexp"
 	"strconv"
 )
 
@@ -46,19 +45,6 @@ func (s *TagsService) Get(tagName string) (*Tag, error) {
 //
 // Instagram API docs: http://instagram.com/developer/endpoints/tags/#get_tags_media_recent
 func (s *TagsService) RecentMedia(tagName string, opt *Parameters) ([]Media, *ResponsePagination, error) {
-	valid, err := validTagName(tagName)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if !valid {
-		//For now, I don't think this is an error but instead an early catch of an input that won't give a result
-		//but it's not clearly defined (as far as I can tell) in the Instagram spec that it *couldn't* give a result
-		//In future, this might change to give an error, though
-		//return nil, nil, errors.New(`go-instagram Tag.RecentMedia error: Tag names must contain only alphabetical and numerical characters.`)
-		return []Media{}, &ResponsePagination{}, nil
-	}
-
 	u := fmt.Sprintf("tags/%v/media/recent", tagName)
 	if opt != nil {
 		params := url.Values{}
@@ -125,19 +111,4 @@ func (s *TagsService) Search(q string) ([]Tag, *ResponsePagination, error) {
 	}
 
 	return *tags, page, err
-}
-
-// Strip out things we know Instagram won't accept. For example, hyphens.
-func validTagName(tagName string) (bool, error) {
-	//\W matches any non-word character
-	reg, err := regexp.Compile(`\W`)
-	if err != nil {
-		return false, err
-	}
-
-	if reg.MatchString(tagName) {
-		return false, nil
-	}
-
-	return true, nil
 }
