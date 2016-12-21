@@ -6,7 +6,10 @@
 package instagram
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 	"net/url"
 )
 
@@ -54,9 +57,37 @@ func (s *CommentsService) Add(mediaID string, text []string) error {
 	if err != nil {
 		return err
 	}
-
+	log.Print("")
 	_, err = s.client.Do(req, nil)
 	return err
+}
+
+//SendSignedRequest comment on a media
+//
+//https://www.instagram.com/developer/endpoints/comments/
+func (s *CommentsService) SendSignedRequest(mediaID string, text string) (*http.Response, error) {
+	urlStr := fmt.Sprintf("media/%v/comments", mediaID)
+	params, err := s.client.setParams(urlStr, text)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.PostForm(BaseURL+urlStr, params)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	err = CheckResponse(resp)
+	if err != nil {
+		return resp, err
+	}
+	var v interface{}
+	r := &Response{Response: resp}
+	if v != nil {
+		r.Data = v
+		err = json.NewDecoder(resp.Body).Decode(r)
+		s.client.Response = r
+	}
+	return resp, err
 }
 
 // Delete a comment either on the authenticated user's media or authored by

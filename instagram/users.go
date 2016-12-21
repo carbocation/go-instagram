@@ -30,6 +30,12 @@ type User struct {
 	Counts         *UserCount `json:"counts,omitempty"`
 }
 
+//UserAccessToken represents Instagram AccessToken response
+type UserAccessToken struct {
+	AccessToken string `json:"access_token"`
+	User        *User
+}
+
 // UserCount represents stats of a Instagram user.
 type UserCount struct {
 	Media      int `json:"media,omitempty"`

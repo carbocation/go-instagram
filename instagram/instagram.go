@@ -54,6 +54,9 @@ const (
 
 	// UserAgent represents this client User-Agent
 	UserAgent = "github.com/carbocation/go-instagram v" + LibraryVersion
+
+	//GrantType grant_type: authorization_code is currently the only supported value
+	GrantType = "authorization_code"
 )
 
 // A Client manages communication with the Instagram API.
@@ -345,6 +348,48 @@ func (c *Client) Do(req *http.Request, v interface{}) (*http.Response, error) {
 	return resp, err
 }
 
+// RetrieveAccessToken convert an authorization code to an access token
+//It exchanged the code you have received in the previous step for an access token. In order to make this exchange,
+//you simply have to POST this code, along with some app identification parameters, to our access_token endpoint
+//
+//https://www.instagram.com/developer/authentication/
+func (c *Client) RetrieveAccessToken(code string, redirectURL string) (*UserAccessToken, error) {
+	uaToken := new(UserAccessToken)
+	urlStr := "https://api.instagram.com/oauth/access_token"
+	var err error
+	if code == "" && redirectURL == "" {
+		return uaToken, err
+	}
+	params := url.Values{}
+	if c.ClientID != "" {
+		params.Add("client_id", c.ClientID)
+	}
+	if c.ClientSecret != "" {
+		params.Add("client_secret", c.ClientSecret)
+	}
+	params.Add("grant_type", GrantType)
+	params.Add("redirect_uri", redirectURL)
+	params.Add("code", code)
+	resp, err := c.client.PostForm(urlStr, params)
+	if err != nil {
+		return uaToken, err
+	}
+	defer resp.Body.Close()
+	err = CheckResponse(resp)
+	if err != nil {
+		return uaToken, err
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return uaToken, err
+	}
+	err = json.Unmarshal(data, &uaToken)
+	if err != nil {
+		return uaToken, err
+	}
+	return uaToken, nil
+}
+
 // Error represents an error recieved from instagram
 type Error ResponseMeta
 
@@ -442,4 +487,30 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	return nil
+}
+
+func (c *Client) setParams(urlStr, str string) (url.Values, error) {
+	rel, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, err
+	}
+	u := c.BaseURL.ResolveReference(rel)
+	q := u.Query()
+	if str != "" {
+		q.Set("text", str)
+	}
+	if c.AccessToken != "" && q.Get("access_token") == "" {
+		q.Set("access_token", c.AccessToken)
+	}
+	if c.ClientSecret != "" && q.Get("client_secret") == "" {
+		q.Set("client_secret", c.ClientSecret)
+	}
+	if c.SignedRequests && q.Get("sig") == "" {
+		sig := c.GenerateSignature(rel.Path, q)
+		q.Set("sig", sig)
+	}
+	if c.ClientID != "" && q.Get("client_id") == "" {
+		q.Set("client_id", c.ClientID)
+	}
+	return q, nil
 }

@@ -88,3 +88,22 @@ func TestNewRequest(t *testing.T) {
 		t.Errorf("NewRequest() User-Agent = %v, want %v", userAgent, c.UserAgent)
 	}
 }
+
+func TestRetrieveAccessToken(t *testing.T) {
+	c := NewClient(nil)
+	urlStr := "https://api.instagram.com/oauth/access_token"
+	code := "jkashdkjashdkj"
+	redirectURL := "uur/ewru/werjwkr"
+	cid := "asdasd"
+	cidSecret := "asdasd"
+	params := url.Values{}
+	params.Add("client_id", cid)
+	params.Add("client_secret", cidSecret)
+	params.Add("grant_type", GrantType)
+	params.Add("redirect_uri", redirectURL)
+	params.Add("code", code)
+	resp, _ := c.client.PostForm(urlStr, params)
+	if resp.StatusCode != 400 {
+		t.Errorf("TestRetrieveAccessToken():\nGet Code: %v\nWant Code: 400", resp.StatusCode)
+	}
+}
